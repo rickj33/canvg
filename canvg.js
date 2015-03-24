@@ -498,7 +498,7 @@
 				this.addPoint(p0[0], p0[1]);
 				this.addPoint(p3[0], p3[1]);
 
-				for (i=0; i<=1; i++) {
+				for (var i=0; i<=1; i++) {
 					var f = function(t) {
 						return Math.pow(1-t, 3) * p0[i]
 						+ 3 * Math.pow(1-t, 2) * t * p1[i]
@@ -895,6 +895,7 @@
 				if (this.style('fill').isUrlDefinition()) {
 					var fs = this.style('fill').getFillStyleDefinition(this, this.style('fill-opacity'));
 					if (fs != null) ctx.fillStyle = fs;
+					fs = null;
 				}
 				else if (this.style('fill').hasValue()) {
 					var fillStyle = this.style('fill');
@@ -911,6 +912,7 @@
 				if (this.style('stroke').isUrlDefinition()) {
 					var fs = this.style('stroke').getFillStyleDefinition(this, this.style('stroke-opacity'));
 					if (fs != null) ctx.strokeStyle = fs;
+					fs = null;
 				}
 				else if (this.style('stroke').hasValue()) {
 					var strokeStyle = this.style('stroke');
@@ -921,6 +923,7 @@
 					var strokeStyle = new svg.Property('stroke', ctx.strokeStyle);
 					strokeStyle = strokeStyle.addOpacity(this.style('stroke-opacity'));
 					ctx.strokeStyle = strokeStyle.value;
+					strokeStyle = null;
 				}
 				if (this.style('stroke-width').hasValue()) {
 					var newLineWidth = this.style('stroke-width').toPixels();
@@ -1073,6 +1076,8 @@
 						ctx.clip();
 					}
 				}
+
+				//todo: at this point there is already a viewport with the same dim from method loadXmlDoc.
 				svg.ViewPort.SetCurrent(width, height);
 
 				// viewbox
@@ -2843,6 +2848,43 @@
 
 			// render loop
 			var isFirstRender = true;
+			
+			
+			//recursive function.
+			var cleanup = function(svgElement)
+			{
+				if (svgElement.children) 
+				{
+					for (i = 0, len = svgElement.children.length; i < len; i++) 
+					{
+						var childSvg = svgElement.children[i];
+						if (childSvg.children ) 
+						{
+							//recursive call.
+							cleanup(childSvg);
+						}
+					}
+					svgElement.children.length = 0;
+					svgElement.children = null;
+					//clear out the attributes.
+					if(svgElement.attributes)
+					{
+						svgElement.attributes ={};
+					}
+					//clear out the styles.
+					if(svgElement.styles)
+					{
+						svgElement.styles ={};
+					}
+					//clear out the stylesSpecificity.
+					if(svgElement.stylesSpecificity)
+					{
+						svgElement.stylesSpecificity ={};
+					}
+
+				}
+			}
+
 			var draw = function() {
 				svg.ViewPort.Clear();
 				if (ctx.canvas.parentNode) svg.ViewPort.SetCurrent(ctx.canvas.parentNode.clientWidth, ctx.canvas.parentNode.clientHeight);
@@ -2898,7 +2940,27 @@
 					isFirstRender = false;
 					if (typeof(svg.opts['renderCallback']) == 'function') svg.opts['renderCallback'](dom);
 				}
+
+				//cleanup allocated svgs.
+				cleanup(e);
+				 for ( var prop in svg.Definitions )
+				 {
+				 	cleanup(prop);
+				 }
+				 svg.Styles = {};
+				 svg.Definitions = {};
+				 svg.StylesSpecificity = {};
+				 if(svg.ViewPort.viewPorts)
+				 {
+				  	svg.ViewPort.viewPorts.length = 0;
+				 }
+				 svg.ViewPort = {};
+              
+				
+
 			}
+
+			
 
 			var waitingForImages = true;
 			if (svg.ImagesLoaded()) {

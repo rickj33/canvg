@@ -184,6 +184,17 @@ function RGBColor(color_string)
             }
         },
         {
+            re: /^rgba\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3}),\s*([\d]+|[\d]*.[\d]+)\)$/,
+            example: ['rgb(123, 234, 45)', 'rgb(255,234,245)'],
+            process: function (bits){
+                return [
+                    parseInt(bits[1]),
+                    parseInt(bits[2]),
+                    parseInt(bits[3])
+                ];
+            }
+        },
+        {
             re: /^(\w{2})(\w{2})(\w{2})$/,
             example: ['#00ff00', '336699'],
             process: function (bits){
@@ -218,6 +229,8 @@ function RGBColor(color_string)
             this.g = channels[1];
             this.b = channels[2];
             this.ok = true;
+            //if the color was parsed, then no need to continue searching.
+            break;
         }
 
     }
