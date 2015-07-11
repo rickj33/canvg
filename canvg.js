@@ -958,6 +958,11 @@
 				if (this.attribute('transform').hasValue()) {
 					var transform = new svg.Transform(this.attribute('transform').value);
 					transform.apply(ctx);
+				}else if (this.styles.transform){
+					var startTransformValue = this.styles.transform.value.indexOf('(');
+					var transformValue = 'translate' + this.styles.transform.value.substring(startTransformValue);
+					var transform = new svg.Transform(transformValue);
+					transform.apply(ctx);
 				}
 
 				// clip
